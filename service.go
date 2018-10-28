@@ -36,22 +36,13 @@ func (s *ServiceRecord) ServiceTypeName() string {
 	return s.serviceTypeName
 }
 
-// NewServiceRecord constructs a ServiceRecord.
-func NewServiceRecord(instance, service string, domain string) *ServiceRecord {
-	service, subtypes := parseSubtypes(service)
-	s := &ServiceRecord{
-		Instance:    instance,
-		Service:     service,
-		Domain:      domain,
-		serviceName: fmt.Sprintf("%s.%s.", trimDot(service), trimDot(domain)),
-	}
+func (s *ServiceRecord) SetDomain(domain string) {
+	s.Domain = domain
 
-	for _, subtype := range subtypes {
-		s.Subtypes = append(s.Subtypes, fmt.Sprintf("%s._sub.%s", trimDot(subtype), s.serviceName))
-	}
+	s.serviceName = fmt.Sprintf("%s.%s.", trimDot(s.Service), trimDot(domain))
 
 	// Cache service instance name
-	if instance != "" {
+	if s.Instance != "" {
 		s.serviceInstanceName = fmt.Sprintf("%s.%s", trimDot(s.Instance), s.ServiceName())
 	}
 
@@ -61,6 +52,21 @@ func NewServiceRecord(instance, service string, domain string) *ServiceRecord {
 		typeNameDomain = trimDot(s.Domain)
 	}
 	s.serviceTypeName = fmt.Sprintf("_services._dns-sd._udp.%s.", typeNameDomain)
+}
+
+// NewServiceRecord constructs a ServiceRecord.
+func NewServiceRecord(instance, service, domain string) *ServiceRecord {
+	service, subtypes := parseSubtypes(service)
+	s := &ServiceRecord{
+		Instance:    instance,
+		Service:     service,
+	}
+
+	for _, subtype := range subtypes {
+		s.Subtypes = append(s.Subtypes, fmt.Sprintf("%s._sub.%s", trimDot(subtype), s.serviceName))
+	}
+
+	s.SetDomain(domain)
 
 	return s
 }
